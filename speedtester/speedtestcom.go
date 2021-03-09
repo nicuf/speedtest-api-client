@@ -1,7 +1,6 @@
-package testers
+package speedtester
 
 import (
-	"github.com/nicuf/speedtest-api-client/factory"
 	"github.com/showwin/speedtest-go/speedtest"
 )
 
@@ -10,7 +9,7 @@ type speedTestCom struct {
 	uploadSpeed   float64
 }
 
-func NewSpeedtestTester() factory.TestUtilityWrapper {
+func NewSpeedtestTester() SpeedTester {
 	return &speedTestCom{}
 }
 
@@ -19,24 +18,32 @@ func (stc *speedTestCom) Run() error {
 	user, err := speedtest.FetchUserInfo()
 
 	if err != nil {
-		return factory.ConfigurationError(err.Error())
+		return ConfigurationError(err.Error())
 	}
 
 	serverList, err := speedtest.FetchServerList(user)
 
 	if err != nil {
-		return factory.ConfigurationError(err.Error())
+		return ConfigurationError(err.Error())
 	}
 
 	targets, err := serverList.FindServer([]int{})
 
 	if err != nil {
-		return factory.ConfigurationError(err.Error())
+		return ConfigurationError(err.Error())
 	}
 
 	for _, s := range targets {
 		err = s.DownloadTest(false)
+		if err != nil {
+			return DownloadTestError(err.Error())
+		}
+
 		err = s.UploadTest(false)
+		if err != nil {
+			return UploadTestError(err.Error())
+		}
+
 		stc.downloadSpeed = s.DLSpeed
 		stc.uploadSpeed = s.ULSpeed
 	}

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/nicuf/speedtest-api-client/testers"
+	"github.com/nicuf/speedtest-api-client/speedtester"
 )
 
 /*
@@ -19,15 +19,23 @@ type speedTestWrapper struct {
 */
 
 func main() {
-	speedTestCom := testers.NewSpeedtestTester()
-	err := speedTestCom.Run()
+	speedTestCom, err := speedtester.NewSpeedTester(speedtester.SpeedTestCom)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = speedTestCom.Run()
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	fmt.Printf("speedtest.com results: download: %.2f Mbps, upload: %.2f Mbps\n", speedTestCom.GetDownloadSpeed(), speedTestCom.GetUploadSpeed())
 
-	fastCom := testers.NewFastComtester()
+	fastCom, err := speedtester.NewSpeedTester(speedtester.FastCom)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	err = fastCom.Run()
 	if err != nil {
 		fmt.Println(err)

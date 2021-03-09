@@ -1,10 +1,9 @@
-package testers
+package speedtester
 
 import (
 	"context"
 	"time"
 
-	"github.com/nicuf/speedtest-api-client/factory"
 	"go.jonnrb.io/speedtest/fastdotcom"
 	"go.jonnrb.io/speedtest/units"
 )
@@ -20,7 +19,7 @@ type fastComTester struct {
 	uploadSpeed   float64
 }
 
-func NewFastComtester() factory.TestUtilityWrapper {
+func NewFastComtester() SpeedTester {
 	return &fastComTester{}
 }
 
@@ -32,17 +31,17 @@ func (fc *fastComTester) Run() error {
 
 	m, err := fastdotcom.GetManifest(ctx, kDefaultUrlCount)
 	if err != nil {
-		return factory.ConfigurationError(err.Error())
+		return ConfigurationError(err.Error())
 	}
 
 	err = fc.testDownload(m, &client)
 	if err != nil {
-		return factory.ConfigurationError(err.Error())
+		return DownloadTestError(err.Error())
 	}
 
 	err = fc.testUpload(m, &client)
 	if err != nil {
-		return factory.ConfigurationError(err.Error())
+		return UploadTestError(err.Error())
 	}
 
 	return nil
