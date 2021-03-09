@@ -60,14 +60,20 @@ func download(m *fastdotcom.Manifest, client *fastdotcom.Client) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	stream, finalize := proberPrinter()
+	stream := make(chan units.BytesPerSecond)
+	var g errgroup.Group
+	g.Go(func() error {
+		for range stream {
+		}
+		return nil
+	})
 
 	speed, err := m.ProbeDownloadSpeed(ctx, client, stream)
 	if err != nil {
 		log.Fatalf("Error probing download speed: %v", err)
 		return
 	}
-	finalize()
+	g.Wait()
 
 	fmt.Println("Final Download Speed: ", speed)
 }
@@ -76,24 +82,7 @@ func upload(m *fastdotcom.Manifest, client *fastdotcom.Client) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	stream, finalize := proberPrinter()
-
-	speed, err := m.ProbeUploadSpeed(ctx, client, stream)
-	if err != nil {
-		log.Fatalf("Error probing upload speed: %v", err)
-		return
-	}
-	finalize()
-
-	fmt.Println("Final Upload Speed: ", speed)
-}
-
-func proberPrinter() (
-	stream chan units.BytesPerSecond,
-	finalize func(),
-) {
-
-	stream = make(chan units.BytesPerSecond)
+	stream := make(chan units.BytesPerSecond)
 	var g errgroup.Group
 	g.Go(func() error {
 		for range stream {
@@ -101,8 +90,12 @@ func proberPrinter() (
 		return nil
 	})
 
-	finalize = func() {
-		g.Wait()
+	speed, err := m.ProbeUploadSpeed(ctx, client, stream)
+	if err != nil {
+		log.Fatalf("Error probing upload speed: %v", err)
+		return
 	}
-	return
+	g.Wait()
+
+	fmt.Println("Final Upload Speed: ", speed)
 }
