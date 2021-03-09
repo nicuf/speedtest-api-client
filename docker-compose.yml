@@ -4,7 +4,7 @@ services:
   go:
     image: golang:1.15
     command: sh -c "go test -v ; go get golang.org/x/tools/cmd/godoc && godoc -http=:6060"
-    working_dir: /app/speedtest-api-client
+    working_dir: /app/speedtester
     volumes:
       - ./:/app
     environment:
