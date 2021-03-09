@@ -1,16 +1,9 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
-	"time"
 
-	"go.jonnrb.io/speedtest/fastdotcom"
-	"go.jonnrb.io/speedtest/units"
-	"golang.org/x/sync/errgroup"
-
-	spdtest "github.com/showwin/speedtest-go/speedtest"
+	"github.com/nicuf/speedtest-api-client/testers"
 )
 
 /*
@@ -18,11 +11,7 @@ type SpeedTester interface {
 	GetSpeeds(ctx context.Context) (float64, float64)
 }
 
-type TestUtilityWrapper interface {
-	Run(ctx context.Context) error
-	GetUploadSpeed() float64
-	GetDownloadSpeed() float64
-}
+
 
 type speedTestWrapper struct {
 }
@@ -30,72 +19,19 @@ type speedTestWrapper struct {
 */
 
 func main() {
-
-	user, _ := spdtest.FetchUserInfo()
-
-	serverList, _ := spdtest.FetchServerList(user)
-	targets, _ := serverList.FindServer([]int{})
-
-	for _, s := range targets {
-		s.DownloadTest(false)
-		s.UploadTest(false)
-		fmt.Printf("Download: %f Mb/s, Upload: %fMb/s\n", s.DLSpeed, s.ULSpeed)
-	}
-
-	var client fastdotcom.Client
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	m, err := fastdotcom.GetManifest(ctx, 5)
+	speedTestCom := testers.NewSpeedtestTester()
+	err := speedTestCom.Run()
 	if err != nil {
-		log.Fatalf("Error loading fast.com configuration: %v", err)
+		fmt.Println(err)
 	}
 
-	download(m, &client)
-	upload(m, &client)
-}
+	fmt.Printf("speedtest.com results: download: %.2f Mbps, upload: %.2f Mbps\n", speedTestCom.GetDownloadSpeed(), speedTestCom.GetUploadSpeed())
 
-func download(m *fastdotcom.Manifest, client *fastdotcom.Client) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	stream := make(chan units.BytesPerSecond)
-	var g errgroup.Group
-	g.Go(func() error {
-		for range stream {
-		}
-		return nil
-	})
-
-	speed, err := m.ProbeDownloadSpeed(ctx, client, stream)
+	fastCom := testers.NewFastComtester()
+	err = fastCom.Run()
 	if err != nil {
-		log.Fatalf("Error probing download speed: %v", err)
-		return
+		fmt.Println(err)
 	}
-	g.Wait()
 
-	fmt.Println("Final Download Speed: ", speed)
-}
-
-func upload(m *fastdotcom.Manifest, client *fastdotcom.Client) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	stream := make(chan units.BytesPerSecond)
-	var g errgroup.Group
-	g.Go(func() error {
-		for range stream {
-		}
-		return nil
-	})
-
-	speed, err := m.ProbeUploadSpeed(ctx, client, stream)
-	if err != nil {
-		log.Fatalf("Error probing upload speed: %v", err)
-		return
-	}
-	g.Wait()
-
-	fmt.Println("Final Upload Speed: ", speed)
+	fmt.Printf("fast.com results: download: %.2f Mbps, upload: %.2f Mbps\n", fastCom.GetDownloadSpeed(), fastCom.GetUploadSpeed())
 }
