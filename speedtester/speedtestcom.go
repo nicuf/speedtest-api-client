@@ -9,7 +9,7 @@ type speedTestCom struct {
 	uploadSpeed   float64
 }
 
-func NewSpeedtestTester() SpeedTester {
+func newSpeedtestTester() SpeedTester {
 	return &speedTestCom{}
 }
 
