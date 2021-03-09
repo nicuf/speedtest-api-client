@@ -43,6 +43,8 @@ func TestSpeedTestCreatingWrongProvider(t *testing.T) {
 	_, err := NewSpeedTester("DummyProvider")
 	if _, ok := err.(UknownProviderError); !ok {
 		t.Errorf("Want error to be of type : UknownProviderError\ngot %T\n", err)
+	} else {
+		t.Log("Got error: ", err.Error())
 	}
 
 }
