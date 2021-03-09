@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"go.jonnrb.io/speedtest/fastdotcom"
-	"go.jonnrb.io/speedtest/oututil"
 	"go.jonnrb.io/speedtest/units"
 	"golang.org/x/sync/errgroup"
 
@@ -40,7 +39,7 @@ func main() {
 	for _, s := range targets {
 		s.DownloadTest(false)
 		s.UploadTest(false)
-		fmt.Printf("Download: %f, Upload: %f\n", s.DLSpeed, s.ULSpeed)
+		fmt.Printf("Download: %f Mb/s, Upload: %fMb/s\n", s.DLSpeed, s.ULSpeed)
 	}
 
 	var client fastdotcom.Client
@@ -61,18 +60,14 @@ func download(m *fastdotcom.Manifest, client *fastdotcom.Client) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	formatFunc := func(s units.BytesPerSecond) string {
-		return formatSpeed("Download speed", s)
-	}
-
-	stream, finalize := proberPrinter(formatFunc)
+	stream, finalize := proberPrinter()
 
 	speed, err := m.ProbeDownloadSpeed(ctx, client, stream)
 	if err != nil {
 		log.Fatalf("Error probing download speed: %v", err)
 		return
 	}
-	finalize(speed)
+	finalize()
 
 	fmt.Println("Final Download Speed: ", speed)
 }
@@ -81,46 +76,33 @@ func upload(m *fastdotcom.Manifest, client *fastdotcom.Client) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	formatFunc := func(s units.BytesPerSecond) string {
-		return formatSpeed("Upload speed", s)
-	}
-
-	stream, finalize := proberPrinter(formatFunc)
+	stream, finalize := proberPrinter()
 
 	speed, err := m.ProbeUploadSpeed(ctx, client, stream)
 	if err != nil {
 		log.Fatalf("Error probing upload speed: %v", err)
 		return
 	}
-	finalize(speed)
+	finalize()
 
 	fmt.Println("Final Upload Speed: ", speed)
 }
 
-func proberPrinter(format func(units.BytesPerSecond) string) (
+func proberPrinter() (
 	stream chan units.BytesPerSecond,
-	finalize func(units.BytesPerSecond),
+	finalize func(),
 ) {
-	p := oututil.StartPrinting()
-	p.Println(format(units.BytesPerSecond(0)))
 
 	stream = make(chan units.BytesPerSecond)
 	var g errgroup.Group
 	g.Go(func() error {
-		for speed := range stream {
-			p.Println(format(speed))
+		for range stream {
 		}
 		return nil
 	})
 
-	finalize = func(s units.BytesPerSecond) {
+	finalize = func() {
 		g.Wait()
-		p.Finalize(format(s))
 	}
 	return
-}
-
-func formatSpeed(prefix string, s units.BytesPerSecond) string {
-	i := s.BitsPerSecond()
-	return fmt.Sprintf("%s: %v", prefix, i)
 }
