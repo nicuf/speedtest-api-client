@@ -14,12 +14,12 @@ or if more control over the returned errors is needed a speed tester object can 
 ```go
 tester, err := NewSpeedTester(provider)
 if err != nil {
-    fmt.Println("Got error durring creation of a speed tester: ", err)
+    fmt.Println("Got an error durring creation of a speed tester: ", err)
 }
 
 err = tester.Run()
 if err != nil {
-    fmt.Println("Got error when runing the speed tests: ", err)
+    fmt.Println("Got an error when runing the speed tests: ", err)
 }
 
 downloadSpeed := tester.GetDownloadSpeed()
