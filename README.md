@@ -26,4 +26,4 @@ downloadSpeed := tester.GetDownloadSpeed()
 uploadSpeed := tester.GetUploadSpeed()
 ```
 
-Full documentation can be can be found after running ```docker docker-compose up``` on [Speedtest-Api-Client](http://localhost:6060/pkg/github.com/nicuf/speedtest-api-client/speedtester/) .
+Full documentation can be can be found after running ``` docker-compose up``` on [Speedtest-Api-Client](http://localhost:6060/pkg/github.com/nicuf/speedtest-api-client/speedtester/) .
